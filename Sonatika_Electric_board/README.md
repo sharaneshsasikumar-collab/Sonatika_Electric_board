@@ -1,42 +1,48 @@
-# Electrical Building Generator
+# Student Electricity Bill App
 
-Small localhost web app for an electricity-board building connection and bill workflow.
+Minimal plus-two student project using Python, SQLite, SQL, and basic HTML forms.
 
-## What Is Included
+## Use Case
 
-- Login demo: `admin` / `admin123`
-- Consumer directory with edit/update flow
-- Bill register and on-screen bill calculation
-- New connection request submission
-- Tariff slabs for residential, commercial, industrial, street light, public app, agriculture, and power plant categories
-- Defaulter list from overdue bills
-- Feedback form with simple special-character validation
-- Expanded SQL schema and seed data in `data/schema.sql` and `data/seed.sql`
-- Runtime JSON data store in `data/app-data.json`
+The app helps students understand a small electricity bill workflow:
+
+- Add a consumer
+- Calculate and save a bill from meter readings
+- View consumers, bills, and tariff slabs
+- Mark a bill as paid
+
+## What Students Learn
+
+- Python web server using the standard library
+- SQLite database connection using `sqlite3`
+- `CREATE TABLE`, `INSERT`, `SELECT`, `JOIN`, and `UPDATE`
+- HTML forms with `GET` and `POST`
+- Simple bill calculation
 
 ## Folder Structure
 
 ```text
-electric-building-generator/
+Sonatika_Electric_board/
   data/
-    app-data.json
     schema.sql
     seed.sql
-  docs/
+    sonatika.db       # created automatically when the app runs
   public/
-    app.js
     index.html
     styles.css
+    app.js            # only a note; JavaScript is not required
   src/
-    server.js
+    server.py
   package.json
-  README.md
 ```
 
 ## Run Locally
 
+Use Python directly:
+
 ```bash
-npm start
+cd Sonatika_Electric_board
+python3 src/server.py
 ```
 
 Open:
@@ -45,19 +51,20 @@ Open:
 http://localhost:3000
 ```
 
-Use another port when needed:
+You can also use npm if available:
 
 ```bash
-PORT=3010 npm start
+cd Sonatika_Electric_board
+npm start
 ```
 
-## Calculation Used
+## Bill Formula
 
 ```text
-Units Consumed = Current Reading - Previous Reading
-Energy Charge = Units Consumed * Rate Per Unit
-Tax = (Energy Charge + Fixed Charge) * Tax Percent
-Total Amount = Energy Charge + Fixed Charge + Tax
+Units = Current Reading - Previous Reading
+Energy Charge = Units * Rate Per Unit
+Tax = (Energy Charge + Fixed Charge) * Tax Percent / 100
+Total = Energy Charge + Fixed Charge + Tax
 ```
 
-The tariff slab is selected from the consumer connection type and consumed unit range.
+The rate is selected from the `Tariff` table based on connection type and units consumed.

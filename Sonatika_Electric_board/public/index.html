@@ -3,48 +3,145 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Electrical Building Generator</title>
+    <title>Student Electricity Bill App</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand">
-          <div class="brand-mark">EB</div>
-          <div>
-            <strong>Electrical Board</strong>
-            <span>Building generator</span>
-          </div>
+    <main class="page">
+      <header class="header">
+        <div>
+          <p class="eyebrow">Python + SQL mini project</p>
+          <h1>Sonatika Electricity Bill</h1>
         </div>
-        <nav class="nav" aria-label="Application sections">
-          <button class="nav-item active" data-view="dashboard" type="button">Dashboard</button>
-          <button class="nav-item" data-view="bills" type="button">Check Bill</button>
-          <button class="nav-item" data-view="connections" type="button">New Connection</button>
-          <button class="nav-item" data-view="consumers" type="button">Update Details</button>
-          <button class="nav-item" data-view="tariffs" type="button">Tariff & Learning</button>
-          <button class="nav-item" data-view="defaulters" type="button">Defaulters</button>
-          <button class="nav-item" data-view="feedback" type="button">Feedback</button>
-        </nav>
-      </aside>
+        <p class="intro">A small plus-two project to learn forms, Python, SQLite, INSERT, SELECT, JOIN, and UPDATE.</p>
+      </header>
 
-      <div class="workspace">
-        <header class="topbar">
-          <div>
-            <p class="eyebrow">Sonatika Electricity Board</p>
-            <h1 id="page-title">Dashboard</h1>
-          </div>
-          <form class="login-box" id="login-form">
-            <input id="login-username" name="username" value="admin" autocomplete="username" aria-label="Username">
-            <input id="login-password" name="password" value="admin123" type="password" autocomplete="current-password" aria-label="Password">
-            <button type="submit">Login</button>
-            <span id="login-status" class="login-status">Guest</span>
-          </form>
-        </header>
+      <p class="notice {{notice_class}}">{{notice}}</p>
 
-        <main id="view" class="view" tabindex="-1"></main>
-      </div>
-    </div>
+      <section class="grid">
+        <form class="panel" method="post" action="/add-consumer">
+          <h2>Add Consumer</h2>
+          <label>
+            Name
+            <input name="name" required>
+          </label>
+          <label>
+            Place
+            <input name="place">
+          </label>
+          <label>
+            Phone
+            <input name="phone" inputmode="numeric">
+          </label>
+          <label>
+            Meter ID
+            <input name="meter_id" required>
+          </label>
+          <label>
+            Connection Type
+            <select name="connection_type">
+              <option>Residential</option>
+              <option>Commercial</option>
+            </select>
+          </label>
+          <button type="submit">Save Consumer</button>
+        </form>
 
-    <script src="/app.js" defer></script>
+        <form class="panel" method="post" action="/add-bill">
+          <h2>Generate Bill</h2>
+          <label>
+            Consumer
+            <select name="consumer_id" required>
+              {{consumer_options}}
+            </select>
+          </label>
+          <label>
+            Bill Month
+            <input name="bill_month" value="August 2026">
+          </label>
+          <label>
+            Previous Reading
+            <input name="previous_reading" type="number" step="0.01" required>
+          </label>
+          <label>
+            Current Reading
+            <input name="current_reading" type="number" step="0.01" required>
+          </label>
+          <button type="submit">Calculate And Save</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Consumers Table</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Place</th>
+                <th>Meter ID</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{consumer_rows}}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Bills Table</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Consumer</th>
+                <th>Month</th>
+                <th>Units</th>
+                <th>Rate</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{bill_rows}}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Tariff Table</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Units</th>
+                <th>Rate / Unit</th>
+                <th>Fixed</th>
+                <th>Tax</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{tariff_rows}}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel sql-box">
+        <h2>SQL Used In This Project</h2>
+        <pre><code>INSERT INTO Consumers (...) VALUES (...);
+SELECT * FROM Consumers;
+SELECT Bill.*, Consumers.Customer_Name
+FROM Bill JOIN Consumers ON Consumers.C_ID = Bill.C_ID;
+UPDATE Bill SET Status = 'Paid' WHERE B_ID = ?;</code></pre>
+      </section>
+    </main>
   </body>
 </html>

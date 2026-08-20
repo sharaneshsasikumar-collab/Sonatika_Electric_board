@@ -1,18 +1,17 @@
 {
-  "name": "electric-building-generator",
+  "name": "student-electricity-bill-python-sql",
   "version": "1.0.0",
-  "description": "Small web application for electrical building connection and bill generation workflows.",
-  "main": "src/server.js",
+  "description": "Minimal plus-two student project using Python, SQLite, and HTML forms.",
+  "main": "src/server.py",
   "scripts": {
-    "start": "node src/server.js",
-    "test": "node --test",
-    "check": "node --check src/server.js"
+    "start": "python3 src/server.py",
+    "check": "python3 -m py_compile src/server.py"
   },
   "keywords": [
-    "electricity",
-    "billing",
-    "tariff",
-    "building"
+    "python",
+    "sqlite",
+    "student-project",
+    "electricity-bill"
   ],
   "author": "",
   "license": "MIT"
