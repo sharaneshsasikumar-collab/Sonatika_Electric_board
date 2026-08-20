@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Electrical Building Generator</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">EB</div>
+          <div>
+            <strong>Electrical Board</strong>
+            <span>Building generator</span>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Application sections">
+          <button class="nav-item active" data-view="dashboard" type="button">Dashboard</button>
+          <button class="nav-item" data-view="bills" type="button">Check Bill</button>
+          <button class="nav-item" data-view="connections" type="button">New Connection</button>
+          <button class="nav-item" data-view="consumers" type="button">Update Details</button>
+          <button class="nav-item" data-view="tariffs" type="button">Tariff & Learning</button>
+          <button class="nav-item" data-view="defaulters" type="button">Defaulters</button>
+          <button class="nav-item" data-view="feedback" type="button">Feedback</button>
+        </nav>
+      </aside>
+
+      <div class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Sonatika Electricity Board</p>
+            <h1 id="page-title">Dashboard</h1>
+          </div>
+          <form class="login-box" id="login-form">
+            <input id="login-username" name="username" value="admin" autocomplete="username" aria-label="Username">
+            <input id="login-password" name="password" value="admin123" type="password" autocomplete="current-password" aria-label="Password">
+            <button type="submit">Login</button>
+            <span id="login-status" class="login-status">Guest</span>
+          </form>
+        </header>
+
+        <main id="view" class="view" tabindex="-1"></main>
+      </div>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>

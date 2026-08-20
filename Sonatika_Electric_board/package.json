@@ -1,0 +1,19 @@
+{
+  "name": "electric-building-generator",
+  "version": "1.0.0",
+  "description": "Small web application for electrical building connection and bill generation workflows.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test",
+    "check": "node --check src/server.js"
+  },
+  "keywords": [
+    "electricity",
+    "billing",
+    "tariff",
+    "building"
+  ],
+  "author": "",
+  "license": "MIT"
+}
