@@ -35,17 +35,111 @@ def setup_database():
 
 
 def migrate_database(connection):
+    connection.execute("PRAGMA foreign_keys = OFF")
+
     consumer_columns = {
         row["name"] for row in connection.execute("PRAGMA table_info(Consumers)")
     }
 
     if "Address" not in consumer_columns:
         connection.execute("ALTER TABLE Consumers ADD COLUMN Address TEXT NOT NULL DEFAULT ''")
+        consumer_columns.add("Address")
 
     if "Place" in consumer_columns:
         connection.execute(
             "UPDATE Consumers SET Address = Place WHERE Address = '' AND Place IS NOT NULL"
         )
+        rebuild_consumers_table(connection)
+
+    connection.execute(
+        "UPDATE Bill SET Status = ? WHERE Status = 'Due'",
+        (UNPAID_STATUS,),
+    )
+
+    bill_sql = table_sql(connection, "Bill")
+    if "DEFAULT 'Due'" in bill_sql:
+        rebuild_bill_table(connection)
+
+
+def table_sql(connection, table_name):
+    row = connection.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?",
+        (table_name,),
+    ).fetchone()
+    return row["sql"] if row else ""
+
+
+def rebuild_consumers_table(connection):
+    connection.execute("DROP TABLE IF EXISTS Consumers_new")
+    connection.execute(
+        """
+        CREATE TABLE Consumers_new (
+            C_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            Customer_Name TEXT NOT NULL,
+            Address TEXT NOT NULL,
+            Phone TEXT,
+            Meter_ID TEXT NOT NULL UNIQUE,
+            Connection_Type TEXT NOT NULL DEFAULT 'Residential'
+        )
+        """
+    )
+    connection.execute(
+        """
+        INSERT INTO Consumers_new
+            (C_ID, Customer_Name, Address, Phone, Meter_ID, Connection_Type)
+        SELECT
+            C_ID,
+            Customer_Name,
+            COALESCE(NULLIF(Address, ''), Place, ''),
+            Phone,
+            Meter_ID,
+            Connection_Type
+        FROM Consumers
+        """
+    )
+    connection.execute("DROP TABLE Consumers")
+    connection.execute("ALTER TABLE Consumers_new RENAME TO Consumers")
+
+
+def rebuild_bill_table(connection):
+    connection.execute("DROP TABLE IF EXISTS Bill_new")
+    connection.execute(
+        """
+        CREATE TABLE Bill_new (
+            B_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+            C_ID INTEGER NOT NULL,
+            Bill_Month TEXT NOT NULL,
+            Previous_Reading REAL NOT NULL,
+            Current_Reading REAL NOT NULL,
+            Units_Consumed REAL NOT NULL,
+            Rate_Per_Unit REAL NOT NULL,
+            Total_Amt REAL NOT NULL,
+            Status TEXT NOT NULL DEFAULT 'Not Paid Bill Please pay ,then connection will be disconnected.| கட்டணம் செலுத்தப்படவில்லை; தயவுசெய்து செலுத்தவும், இல்லையெனில் இணைப்பு துண்டிக்கப்படும்.',
+            FOREIGN KEY (C_ID) REFERENCES Consumers(C_ID)
+        )
+        """
+    )
+    connection.execute(
+        """
+        INSERT INTO Bill_new
+            (B_ID, C_ID, Bill_Month, Previous_Reading, Current_Reading,
+             Units_Consumed, Rate_Per_Unit, Total_Amt, Status)
+        SELECT
+            B_ID,
+            C_ID,
+            Bill_Month,
+            Previous_Reading,
+            Current_Reading,
+            Units_Consumed,
+            Rate_Per_Unit,
+            Total_Amt,
+            CASE WHEN Status = 'Due' THEN ? ELSE Status END
+        FROM Bill
+        """,
+        (UNPAID_STATUS,),
+    )
+    connection.execute("DROP TABLE Bill")
+    connection.execute("ALTER TABLE Bill_new RENAME TO Bill")
 
 
 def money(value):
