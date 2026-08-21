@@ -153,6 +153,10 @@ def money(value):
     return round(float(value), 2)
 
 
+def format_money(value):
+    return f"Rs. {money(value):,.2f}"
+
+
 def esc(value):
     return html.escape(str(value or ""), quote=True)
 
@@ -306,8 +310,11 @@ def build_bill_rows(bills):
 
     rows = []
     for bill in bills:
+        paid = bill["Status"] == "Paid"
+        status_label = "Paid" if paid else "Pending"
+        status_class = "paid" if paid else "pending"
         action = ""
-        if bill["Status"] != "Paid":
+        if not paid:
             action = (
                 "<form method='post' action='/mark-paid'>"
                 f"<input type='hidden' name='bill_id' value='{bill['B_ID']}'>"
@@ -322,8 +329,8 @@ def build_bill_rows(bills):
             f"<td>{esc(bill['Bill_Month'])}</td>"
             f"<td>{bill['Units_Consumed']}</td>"
             f"<td>Rs. {bill['Rate_Per_Unit']}</td>"
-            f"<td>Rs. {bill['Total_Amt']}</td>"
-            f"<td>{esc(bill['Status'])}</td>"
+            f"<td>{format_money(bill['Total_Amt'])}</td>"
+            f"<td><span class='status-pill {status_class}' title='{esc(bill['Status'])}'>{status_label}</span></td>"
             f"<td>{action}</td>"
             "</tr>"
         )
@@ -362,6 +369,11 @@ def render_page(query):
             "SELECT * FROM Tariff ORDER BY Connection_Type, Min_Units"
         ).fetchall()
 
+    total_consumers = len(consumers)
+    generated_bills = len(bills)
+    revenue_total = sum(float(bill["Total_Amt"]) for bill in bills)
+    unpaid_bills = sum(1 for bill in bills if bill["Status"] != "Paid")
+
     template = (PUBLIC_DIR / "index.html").read_text(encoding="utf-8")
     message = query.get("message", [""])[0]
     error = query.get("error", [""])[0]
@@ -370,6 +382,16 @@ def render_page(query):
 
     return template.replace("{{notice_class}}", notice_class).replace(
         "{{notice}}", esc(notice)
+    ).replace(
+        "{{total_consumers}}", str(total_consumers)
+    ).replace(
+        "{{active_meters}}", str(total_consumers)
+    ).replace(
+        "{{generated_bills}}", str(generated_bills)
+    ).replace(
+        "{{revenue_total}}", format_money(revenue_total)
+    ).replace(
+        "{{unpaid_bills}}", str(unpaid_bills)
     ).replace(
         "{{consumer_options}}", build_options(consumers)
     ).replace(
