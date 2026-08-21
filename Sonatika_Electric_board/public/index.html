@@ -26,8 +26,8 @@
             <input name="name" required>
           </label>
           <label>
-            Place
-            <input name="place">
+            Address
+            <input name="address" required>
           </label>
           <label>
             Phone
@@ -79,7 +79,7 @@
               <tr>
                 <th>ID</th>
                 <th>Name</th>
-                <th>Place</th>
+                <th>Address</th>
                 <th>Meter ID</th>
                 <th>Type</th>
               </tr>
@@ -136,7 +136,7 @@
 
       <section class="panel sql-box">
         <h2>SQL Used In This Project</h2>
-        <pre><code>INSERT INTO Consumers (...) VALUES (...);
+        <pre><code>INSERT INTO Consumers (Customer_Name, Address, Phone, Meter_ID, Connection_Type) VALUES (...);
 SELECT * FROM Consumers;
 SELECT Bill.*, Consumers.Customer_Name
 FROM Bill JOIN Consumers ON Consumers.C_ID = Bill.C_ID;

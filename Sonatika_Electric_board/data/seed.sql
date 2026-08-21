@@ -1,5 +1,5 @@
 INSERT INTO Consumers
-    (Customer_Name, Place, Phone, Meter_ID, Connection_Type)
+    (Customer_Name, Address, Phone, Meter_ID, Connection_Type)
 VALUES
     ('Meera Krishnan', 'Sonatika East', '9876543210', 'RES1001', 'Residential'),
     ('Anand Stores', 'South Bazaar', '7766554433', 'COM2001', 'Commercial');
@@ -17,4 +17,4 @@ INSERT INTO Bill
     (C_ID, Bill_Month, Previous_Reading, Current_Reading,
      Units_Consumed, Rate_Per_Unit, Total_Amt, Status)
 VALUES
-    (1, 'August 2026', 1000.00, 1120.00, 120.00, 3.50, 519.75, 'Due');
+    (1, 'August 2026', 1000.00, 1120.00, 120.00, 3.50, 519.75, 'Not Paid Bill Please pay ,then connection will be disconnected.| கட்டணம் செலுத்தப்படவில்லை; தயவுசெய்து செலுத்தவும், இல்லையெனில் இணைப்பு துண்டிக்கப்படும்.');

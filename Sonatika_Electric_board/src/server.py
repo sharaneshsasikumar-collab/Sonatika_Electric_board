@@ -12,6 +12,10 @@ DB_FILE = DATA_DIR / "sonatika.db"
 SCHEMA_FILE = DATA_DIR / "schema.sql"
 SEED_FILE = DATA_DIR / "seed.sql"
 PORT = 3000
+UNPAID_STATUS = (
+    "Not Paid Bill Please pay ,then connection will be disconnected.| "
+    "கட்டணம் செலுத்தப்படவில்லை; தயவுசெய்து செலுத்தவும், இல்லையெனில் இணைப்பு துண்டிக்கப்படும்."
+)
 
 
 def get_connection():
@@ -24,9 +28,24 @@ def setup_database():
     DATA_DIR.mkdir(exist_ok=True)
     with get_connection() as connection:
         connection.executescript(SCHEMA_FILE.read_text(encoding="utf-8"))
+        migrate_database(connection)
         consumer_count = connection.execute("SELECT COUNT(*) FROM Consumers").fetchone()[0]
         if consumer_count == 0:
             connection.executescript(SEED_FILE.read_text(encoding="utf-8"))
+
+
+def migrate_database(connection):
+    consumer_columns = {
+        row["name"] for row in connection.execute("PRAGMA table_info(Consumers)")
+    }
+
+    if "Address" not in consumer_columns:
+        connection.execute("ALTER TABLE Consumers ADD COLUMN Address TEXT NOT NULL DEFAULT ''")
+
+    if "Place" in consumer_columns:
+        connection.execute(
+            "UPDATE Consumers SET Address = Place WHERE Address = '' AND Place IS NOT NULL"
+        )
 
 
 def money(value):
@@ -64,23 +83,23 @@ def find_tariff(connection, connection_type, units):
 
 def add_consumer(form):
     name = field(form, "name")
-    place = field(form, "place")
+    address = field(form, "address")
     phone = field(form, "phone")
     meter_id = field(form, "meter_id")
     connection_type = field(form, "connection_type") or "Residential"
 
-    if not name or not meter_id:
-        return redirect("/", error="Name and meter ID are required.")
+    if not name or not address or not meter_id:
+        return redirect("/", error="Name, address, and meter ID are required.")
 
     with get_connection() as connection:
         try:
             connection.execute(
                 """
                 INSERT INTO Consumers
-                    (Customer_Name, Place, Phone, Meter_ID, Connection_Type)
+                    (Customer_Name, Address, Phone, Meter_ID, Connection_Type)
                 VALUES (?, ?, ?, ?, ?)
                 """,
-                (name, place, phone, meter_id, connection_type),
+                (name, address, phone, meter_id, connection_type),
             )
         except sqlite3.IntegrityError:
             return redirect("/", error="Meter ID already exists.")
@@ -123,9 +142,9 @@ def add_bill(form):
         connection.execute(
             """
             INSERT INTO Bill
-                (C_ID, Bill_Month, Previous_Reading, Current_Reading,
-                 Units_Consumed, Rate_Per_Unit, Total_Amt, Status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'Due')
+                (C_ID, Bill_Month, Previous_Reading, Current_Reading, Units_Consumed,
+                 Rate_Per_Unit, Total_Amt, Status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 consumer_id,
@@ -135,6 +154,7 @@ def add_bill(form):
                 units,
                 tariff["Rate_Per_Unit"],
                 total,
+                UNPAID_STATUS,
             ),
         )
 
@@ -171,7 +191,7 @@ def build_consumer_rows(consumers):
             "<tr>"
             f"<td>{consumer['C_ID']}</td>"
             f"<td>{esc(consumer['Customer_Name'])}</td>"
-            f"<td>{esc(consumer['Place'])}</td>"
+            f"<td>{esc(consumer['Address'])}</td>"
             f"<td>{esc(consumer['Meter_ID'])}</td>"
             f"<td>{esc(consumer['Connection_Type'])}</td>"
             "</tr>"
@@ -186,7 +206,7 @@ def build_bill_rows(bills):
     rows = []
     for bill in bills:
         action = ""
-        if bill["Status"] == "Due":
+        if bill["Status"] != "Paid":
             action = (
                 "<form method='post' action='/mark-paid'>"
                 f"<input type='hidden' name='bill_id' value='{bill['B_ID']}'>"
