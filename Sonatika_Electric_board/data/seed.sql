@@ -17,4 +17,4 @@ INSERT INTO Bill
     (C_ID, Bill_Month, Previous_Reading, Current_Reading,
      Units_Consumed, Rate_Per_Unit, Total_Amt, Status)
 VALUES
-    (1, 'August 2026', 1000.00, 1120.00, 120.00, 3.50, 519.75, 'Not Paid Bill Please pay ,then connection will be disconnected.| கட்டணம் செலுத்தப்படவில்லை; தயவுசெய்து செலுத்தவும், இல்லையெனில் இணைப்பு துண்டிக்கப்படும்.');
+    (1, 'August 2026', 1000.00, 1120.00, 120.00, 3.50, 519.75, 'if the bill is not paid then you connection will be disconnected/உங்கள் பில் செலுத்தப்படாவிட்டால் உங்கள் இணைப்பு துண்டிக்கப்படும்');

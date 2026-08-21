@@ -13,8 +13,8 @@ SCHEMA_FILE = DATA_DIR / "schema.sql"
 SEED_FILE = DATA_DIR / "seed.sql"
 PORT = 3000
 UNPAID_STATUS = (
-    "Not Paid Bill Please pay ,then connection will be disconnected.| "
-    "கட்டணம் செலுத்தப்படவில்லை; தயவுசெய்து செலுத்தவும், இல்லையெனில் இணைப்பு துண்டிக்கப்படும்."
+    "if the bill is not paid then you connection will be disconnected/"
+    "உங்கள் பில் செலுத்தப்படாவிட்டால் உங்கள் இணைப்பு துண்டிக்கப்படும்"
 )
 
 
@@ -52,7 +52,14 @@ def migrate_database(connection):
         rebuild_consumers_table(connection)
 
     connection.execute(
-        "UPDATE Bill SET Status = ? WHERE Status = 'Due'",
+        """
+        UPDATE Bill
+        SET Status = ?
+        WHERE Status IN (
+            'Due',
+            'Not Paid Bill Please pay ,then connection will be disconnected.| கட்டணம் செலுத்தப்படவில்லை; தயவுசெய்து செலுத்தவும், இல்லையெனில் இணைப்பு துண்டிக்கப்படும்.'
+        )
+        """,
         (UNPAID_STATUS,),
     )
 
@@ -107,14 +114,14 @@ def rebuild_bill_table(connection):
         """
         CREATE TABLE Bill_new (
             B_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-            C_ID INTEGER NOT NULL,
+            C_ID varchar(7) NOT NULL,
             Bill_Month TEXT NOT NULL,
             Previous_Reading REAL NOT NULL,
             Current_Reading REAL NOT NULL,
             Units_Consumed REAL NOT NULL,
             Rate_Per_Unit REAL NOT NULL,
             Total_Amt REAL NOT NULL,
-            Status TEXT NOT NULL DEFAULT 'Not Paid Bill Please pay ,then connection will be disconnected.| கட்டணம் செலுத்தப்படவில்லை; தயவுசெய்து செலுத்தவும், இல்லையெனில் இணைப்பு துண்டிக்கப்படும்.',
+            Status TEXT NOT NULL DEFAULT 'if the bill is not paid then you connection will be disconnected/உங்கள் பில் செலுத்தப்படாவிட்டால் உங்கள் இணைப்பு துண்டிக்கப்படும்',
             FOREIGN KEY (C_ID) REFERENCES Consumers(C_ID)
         )
         """
