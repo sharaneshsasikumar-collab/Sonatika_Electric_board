@@ -141,6 +141,8 @@ def add_bill(form):
     return redirect("/", message=f"Bill saved. Units: {units}, Total: Rs. {total}")
 
 
+
+
 def mark_paid(form):
     bill_id = field(form, "bill_id")
     with get_connection() as connection:
