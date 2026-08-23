@@ -1,0 +1,345 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "password": "admin123",
+      "role": "Officer"
+    }
+  ],
+  "connectionTypes": [
+    "Residential",
+    "Commercial",
+    "Industrial",
+    "Street Light",
+    "Public App",
+    "Agriculture",
+    "Power Plant"
+  ],
+  "consumers": [
+    {
+      "id": 1,
+      "name": "Chandran Mahadevan",
+      "address": "#20, Lodha Aqua, Zone 1, Janakapurana",
+      "place": "Edorala City",
+      "phone": "1789456897",
+      "meterId": "AAAA0000",
+      "connectionType": "Residential"
+    },
+    {
+      "id": 2,
+      "name": "Meera Krishnan",
+      "address": "14 Lake View Street",
+      "place": "Sonatika East",
+      "phone": "9876543210",
+      "meterId": "RES1045",
+      "connectionType": "Residential"
+    },
+    {
+      "id": 3,
+      "name": "Green Forge Works",
+      "address": "Industrial Plot 42",
+      "place": "North Grid Park",
+      "phone": "8123456780",
+      "meterId": "IND2201",
+      "connectionType": "Industrial"
+    },
+    {
+      "id": 4,
+      "name": "City Street Light Wing",
+      "address": "Ward Office 8",
+      "place": "Central Circle",
+      "phone": "9000011122",
+      "meterId": "PUB7781",
+      "connectionType": "Street Light"
+    },
+    {
+      "id": 5,
+      "name": "Anand Textiles",
+      "address": "Market Road 6",
+      "place": "South Bazaar",
+      "phone": "7766554433",
+      "meterId": "COM6190",
+      "connectionType": "Commercial"
+    },
+    {
+      "id": 6,
+      "name": "Rural Pump House",
+      "address": "Canal Road, Sector 3",
+      "place": "Govt Pump Zone",
+      "phone": "8899001122",
+      "meterId": "AGR9088",
+      "connectionType": "Agriculture"
+    }
+  ],
+  "meterReadings": [
+    {
+      "id": 1,
+      "consumerId": 1,
+      "date": "2026-01-01",
+      "currentReading": 18750,
+      "previousReading": 17777.56,
+      "unitsConsumed": 972.44
+    },
+    {
+      "id": 2,
+      "consumerId": 2,
+      "date": "2026-08-01",
+      "currentReading": 10340,
+      "previousReading": 10122,
+      "unitsConsumed": 218
+    },
+    {
+      "id": 3,
+      "consumerId": 3,
+      "date": "2026-08-01",
+      "currentReading": 88420,
+      "previousReading": 84600,
+      "unitsConsumed": 3820
+    },
+    {
+      "id": 4,
+      "consumerId": 4,
+      "date": "2026-08-01",
+      "currentReading": 49210,
+      "previousReading": 48110,
+      "unitsConsumed": 1100
+    },
+    {
+      "id": 5,
+      "consumerId": 5,
+      "date": "2026-08-01",
+      "currentReading": 23450,
+      "previousReading": 22670,
+      "unitsConsumed": 780
+    },
+    {
+      "id": 6,
+      "consumerId": 6,
+      "date": "2026-08-01",
+      "currentReading": 12800,
+      "previousReading": 12100,
+      "unitsConsumed": 700
+    }
+  ],
+  "tariffs": [
+    {
+      "id": 1,
+      "connectionType": "Residential",
+      "minUnits": 0,
+      "maxUnits": 100,
+      "rate": 2.2,
+      "fixedCharge": 80,
+      "taxPercent": 5
+    },
+    {
+      "id": 2,
+      "connectionType": "Residential",
+      "minUnits": 101,
+      "maxUnits": 300,
+      "rate": 3.8,
+      "fixedCharge": 120,
+      "taxPercent": 5
+    },
+    {
+      "id": 3,
+      "connectionType": "Residential",
+      "minUnits": 301,
+      "maxUnits": 999999,
+      "rate": 5.6,
+      "fixedCharge": 180,
+      "taxPercent": 5
+    },
+    {
+      "id": 4,
+      "connectionType": "Commercial",
+      "minUnits": 0,
+      "maxUnits": 250,
+      "rate": 6,
+      "fixedCharge": 350,
+      "taxPercent": 8
+    },
+    {
+      "id": 5,
+      "connectionType": "Commercial",
+      "minUnits": 251,
+      "maxUnits": 999999,
+      "rate": 7.4,
+      "fixedCharge": 500,
+      "taxPercent": 8
+    },
+    {
+      "id": 6,
+      "connectionType": "Industrial",
+      "minUnits": 0,
+      "maxUnits": 1000,
+      "rate": 7.8,
+      "fixedCharge": 1200,
+      "taxPercent": 10
+    },
+    {
+      "id": 7,
+      "connectionType": "Industrial",
+      "minUnits": 1001,
+      "maxUnits": 999999,
+      "rate": 8.9,
+      "fixedCharge": 1800,
+      "taxPercent": 10
+    },
+    {
+      "id": 8,
+      "connectionType": "Street Light",
+      "minUnits": 0,
+      "maxUnits": 999999,
+      "rate": 4.2,
+      "fixedCharge": 250,
+      "taxPercent": 4
+    },
+    {
+      "id": 9,
+      "connectionType": "Public App",
+      "minUnits": 0,
+      "maxUnits": 999999,
+      "rate": 3.75,
+      "fixedCharge": 200,
+      "taxPercent": 4
+    },
+    {
+      "id": 10,
+      "connectionType": "Agriculture",
+      "minUnits": 0,
+      "maxUnits": 999999,
+      "rate": 1.5,
+      "fixedCharge": 60,
+      "taxPercent": 2
+    },
+    {
+      "id": 11,
+      "connectionType": "Power Plant",
+      "minUnits": 0,
+      "maxUnits": 999999,
+      "rate": 6.5,
+      "fixedCharge": 1500,
+      "taxPercent": 12
+    }
+  ],
+  "bills": [
+    {
+      "id": 1,
+      "consumerId": 1,
+      "billMonth": "January 2026",
+      "unitsConsumed": 972.44,
+      "energyCharge": 5445.66,
+      "fixedCharge": 180,
+      "tax": 281.28,
+      "totalAmount": 5906.95,
+      "billDate": "2026-01-02",
+      "dueDate": "2026-01-17",
+      "status": "Overdue"
+    },
+    {
+      "id": 2,
+      "consumerId": 2,
+      "billMonth": "August 2026",
+      "unitsConsumed": 218,
+      "energyCharge": 828.4,
+      "fixedCharge": 120,
+      "tax": 47.42,
+      "totalAmount": 995.82,
+      "billDate": "2026-08-02",
+      "dueDate": "2026-08-22",
+      "status": "Due"
+    },
+    {
+      "id": 3,
+      "consumerId": 3,
+      "billMonth": "August 2026",
+      "unitsConsumed": 3820,
+      "energyCharge": 33998,
+      "fixedCharge": 1800,
+      "tax": 3579.8,
+      "totalAmount": 39377.8,
+      "billDate": "2026-08-02",
+      "dueDate": "2026-08-22",
+      "status": "Due"
+    },
+    {
+      "id": 4,
+      "consumerId": 4,
+      "billMonth": "August 2026",
+      "unitsConsumed": 1100,
+      "energyCharge": 4620,
+      "fixedCharge": 250,
+      "tax": 194.8,
+      "totalAmount": 5064.8,
+      "billDate": "2026-08-02",
+      "dueDate": "2026-08-22",
+      "status": "Paid"
+    },
+    {
+      "id": 5,
+      "consumerId": 5,
+      "billMonth": "August 2026",
+      "unitsConsumed": 780,
+      "energyCharge": 5772,
+      "fixedCharge": 500,
+      "tax": 501.76,
+      "totalAmount": 6773.76,
+      "billDate": "2026-08-02",
+      "dueDate": "2026-08-22",
+      "status": "Due"
+    },
+    {
+      "id": 6,
+      "consumerId": 6,
+      "billMonth": "August 2026",
+      "unitsConsumed": 700,
+      "energyCharge": 1050,
+      "fixedCharge": 60,
+      "tax": 22.2,
+      "totalAmount": 1132.2,
+      "billDate": "2026-08-02",
+      "dueDate": "2026-08-22",
+      "status": "Paid"
+    }
+  ],
+  "connectionRequests": [
+    {
+      "id": 1,
+      "applicantName": "Nila Apartments",
+      "place": "Sonatika West",
+      "address": "Plot 9, New Housing Block",
+      "phone": "9988776655",
+      "connectionType": "Residential",
+      "loadKw": 18.5,
+      "status": "Field Review",
+      "createdAt": "2026-08-12"
+    },
+    {
+      "id": 2,
+      "applicantName": "Metro Charging Point",
+      "place": "Central Circle",
+      "address": "Bus Depot Yard",
+      "phone": "8877665544",
+      "connectionType": "Public App",
+      "loadKw": 45,
+      "status": "Submitted",
+      "createdAt": "2026-08-18"
+    }
+  ],
+  "feedback": [
+    {
+      "id": 1,
+      "consumerId": 2,
+      "place": "Sonatika East",
+      "message": "Bill page is clear and easy to verify",
+      "createdAt": "2026-08-15"
+    },
+    {
+      "id": 2,
+      "consumerId": 5,
+      "place": "South Bazaar",
+      "message": "Need faster support for load upgrade",
+      "createdAt": "2026-08-18"
+    }
+  ]
+}
