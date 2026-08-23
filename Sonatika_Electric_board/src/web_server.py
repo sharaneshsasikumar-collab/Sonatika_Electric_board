@@ -12,6 +12,7 @@ DB_FILE = DATA_DIR / "sonatika.db"
 SCHEMA_FILE = DATA_DIR / "schema.sql"
 SEED_FILE = DATA_DIR / "seed.sql"
 PORT = 3000
+PERSONAL_CONSUMER_ID = 1
 
 
 def get_connection():
@@ -127,20 +128,41 @@ def delete_consumer(form):
 
 
 def render_page(query):
+    view = query.get("view", ["customer"])[0]
+    personal_only = view != "corporate"
     with get_connection() as connection:
-        consumers = connection.execute("SELECT * FROM Consumers ORDER BY C_ID DESC").fetchall()
+        if personal_only:
+            consumers = connection.execute(
+                "SELECT * FROM Consumers WHERE C_ID = ?",
+                (PERSONAL_CONSUMER_ID,),
+            ).fetchall()
+        else:
+            consumers = connection.execute(
+                "SELECT * FROM Consumers ORDER BY C_ID DESC"
+            ).fetchall()
         bills = connection.execute(
             """
             SELECT Bill.*, Consumers.Customer_Name
             FROM Bill JOIN Consumers ON Consumers.C_ID = Bill.C_ID
+            WHERE (? = 0 OR Bill.C_ID = ?)
             ORDER BY Bill.B_ID DESC
+            """,
+            (0 if personal_only else 1, PERSONAL_CONSUMER_ID),
+        ).fetchall()
+        readings = connection.execute(
             """
+            SELECT * FROM Meter_Readings
+            WHERE (? = 0 OR C_ID = ?)
+            ORDER BY R_Date DESC
+            """,
+            (0 if personal_only else 1, PERSONAL_CONSUMER_ID),
         ).fetchall()
         tariffs = connection.execute("SELECT * FROM Tariff ORDER BY Connection_Type, Min_Units").fetchall()
 
     def esc(item):
         return html.escape(str(item or ""), quote=True)
 
+    consumer = consumers[0] if consumers else None
     options = "\n".join(
         f"<option value='{row['C_ID']}'>{esc(row['Customer_Name'])} ({esc(row['Meter_ID'])})</option>"
         for row in consumers
@@ -158,6 +180,11 @@ def render_page(query):
         f"<td>{esc(row['Status'])}</td><td></td></tr>"
         for row in bills
     ) or "<tr><td colspan='8'>No bills generated yet.</td></tr>"
+    reading_rows = "\n".join(
+        f"<tr><td>{esc(row['R_Date'])}</td><td>{row['Previous_Reading']}</td>"
+        f"<td>{row['Units_Consumed']}</td></tr>"
+        for row in readings
+    ) or "<tr><td colspan='3'>No meter readings yet.</td></tr>"
     tariff_rows = "\n".join(
         f"<tr><td>{esc(row['Connection_Type'])}</td><td>{row['Min_Units']} - {row['Max_Units']}</td>"
         f"<td>Rs. {row['Rate_Per_Unit']}</td><td>Rs. {row['Fixed_Charge']}</td>"
@@ -177,7 +204,17 @@ def render_page(query):
         "{{consumer_options}}": options,
         "{{consumer_rows}}": consumer_rows,
         "{{bill_rows}}": bill_rows,
+        "{{reading_rows}}": reading_rows,
         "{{tariff_rows}}": tariff_rows,
+        "{{customer_name}}": esc(consumer["Customer_Name"] if consumer else "No consumer added"),
+        "{{customer_address}}": esc(consumer["Address"] if consumer else "-"),
+        "{{meter_id}}": esc(consumer["Meter_ID"] if consumer else "-"),
+        "{{connection_type}}": esc(consumer["Connection_Type"] if consumer else "-"),
+        "{{view_options}}": (
+            "<a href='/?view=corporate'>1. Corporation</a>"
+            "<a href='/?view=customer'>2. Customer</a>"
+        ),
+        "{{view_class}}": "customer-view" if personal_only else "corporation-view",
     }
     for marker, replacement in replacements.items():
         template = template.replace(marker, replacement)

@@ -41,6 +41,25 @@ select {
   min-height: 100vh;
 }
 
+.customer-view .corporate-only {
+  display: none;
+}
+
+.view-switcher {
+  display: flex;
+  gap: 10px;
+  padding: 12px clamp(16px, 3vw, 38px) 0;
+}
+
+.view-switcher a {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .topbar {
   min-height: 72px;
   display: flex;
