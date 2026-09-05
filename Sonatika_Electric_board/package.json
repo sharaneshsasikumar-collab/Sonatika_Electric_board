@@ -1,0 +1,16 @@
+{
+  "name": "sonatika-class-12-electricity-project",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sonatika Electricity Board Class XII internal activity project",
+  "scripts": {
+    "start": "node web/server.mjs",
+    "dev": "node --watch web/server.mjs",
+    "terminal": "python3 src/server.py",
+    "check": "node --check web/server.mjs && node --check public/app.js"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

@@ -1,201 +1,210 @@
 from pathlib import Path
-import shutil
-import sys
-import re
+import sqlite3
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = ROOT / "data"
+DB_FILE = DATA_DIR / "sonatika.db"
+SCHEMA_FILE = DATA_DIR / "schema.sql"
+SEED_FILE = DATA_DIR / "seed.sql"
 
 
-def resolve_path(rel_path: str) -> Path:
-    p = (ROOT / rel_path).resolve()
-    try:
-        root_resolved = ROOT.resolve()
-    except Exception:
-        root_resolved = ROOT
-    if not str(p).startswith(str(root_resolved)):
-        raise ValueError("Path is outside the workspace root")
-    return p
+def get_connection():
+    connection = sqlite3.connect(DB_FILE)
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA foreign_keys = ON")
+    return connection
 
 
-def read_file_cli():
-    rel = input("File to read (relative to workspace): ").strip()
-    try:
-        p = resolve_path(rel)
-    except ValueError as e:
-        print(e)
-        return
-    if not p.exists():
-        print("File does not exist.")
-        return
-    with p.open("r", encoding="utf-8", errors="replace") as f:
-        for i, line in enumerate(f, 1):
-            print(f"{i:4}: {line.rstrip()}")
+def setup_database():
+    DATA_DIR.mkdir(exist_ok=True)
+    with get_connection() as connection:
+        connection.executescript(SCHEMA_FILE.read_text(encoding="utf-8"))
+        consumer_count = connection.execute(
+            "SELECT COUNT(*) FROM Consumers"
+        ).fetchone()[0]
+        if consumer_count == 0:
+            connection.executescript(SEED_FILE.read_text(encoding="utf-8"))
 
 
-def write_file_cli():
-    rel = input("File to write (relative to workspace): ").strip()
-    try:
-        p = resolve_path(rel)
-    except ValueError as e:
-        print(e)
-        return
-    if p.exists():
-        yn = input("File exists — overwrite? (y/N): ").strip().lower()
-        if yn != "y":
-            print("Aborted")
-            return
-    print("Enter content. End with a single line containing only .END")
-    lines = []
-    while True:
-        line = input()
-        if line == ".END":
-            break
-        lines.append(line)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    with p.open("w", encoding="utf-8") as f:
-        f.write("\n".join(lines) + ("\n" if lines and not lines[-1].endswith("\n") else ""))
-    print("Wrote file.")
+def read_consumer():
+    c_id = int(input("Enter consumer ID: "))
+    with get_connection() as connection:
+        consumer = connection.execute(
+            "SELECT * FROM Consumers WHERE C_ID = ?",
+            (c_id,),
+        ).fetchone()
+
+    if consumer is None:
+        print("Consumer not found")
+    else:
+        print(dict(consumer))
 
 
-def append_file_cli():
-    rel = input("File to append (relative to workspace): ").strip()
-    try:
-        p = resolve_path(rel)
-    except ValueError as e:
-        print(e)
-        return
-    if not p.exists():
-        yn = input("File does not exist — create? (y/N): ").strip().lower()
-        if yn != "y":
-            print("Aborted")
-            return
-    print("Enter content to append. End with a single line containing only .END")
-    lines = []
-    while True:
-        line = input()
-        if line == ".END":
-            break
-        lines.append(line)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    with p.open("a", encoding="utf-8") as f:
-        f.write("\n".join(lines) + ("\n" if lines and not lines[-1].endswith("\n") else ""))
-    print("Appended to file.")
+def write_consumer():
+    name = input("Enter consumer name: ")
+    address = input("Enter address: ")
+    phone = input("Enter phone: ")
+    meter_id = input("Enter meter ID: ")
+    connection_type = input("Enter connection type: ") or "Residential"
 
-
-def update_file_cli():
-    rel = input("File to update (relative to workspace): ").strip()
-    try:
-        p = resolve_path(rel)
-    except ValueError as e:
-        print(e)
-        return
-    if not p.exists():
-        print("File does not exist.")
-        return
-    mode = input("Update by (1) replace text or (2) replace line number? Enter 1 or 2: ").strip()
-    if mode == "1":
-        find = input("Text to find: ")
-        replace = input("Replacement text: ")
-        text = p.read_text(encoding="utf-8")
-        new_text = text.replace(find, replace)
-        if new_text == text:
-            print("No occurrences replaced.")
-            return
-        p.write_text(new_text, encoding="utf-8")
-        print("Replacements done.")
-    elif mode == "2":
+    with get_connection() as connection:
         try:
-            lineno = int(input("Line number to replace: ").strip())
-        except ValueError:
-            print("Invalid line number")
+            connection.execute(
+                """
+                INSERT INTO Consumers
+                    (Customer_Name, Address, Phone, Meter_ID, Connection_Type)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (name, address, phone, meter_id, connection_type),
+            )
+            print("Consumer added successfully")
+        except sqlite3.IntegrityError:
+            print("Meter ID already exists")
+
+
+def append_bill():
+    c_id = int(input("Enter consumer ID: "))
+    bill_month = input("Enter bill month: ")
+    previous_reading = float(input("Enter previous reading: "))
+    current_reading = float(input("Enter current reading: "))
+
+    if current_reading < previous_reading:
+        print("Current reading cannot be less than previous reading")
+        return
+
+    units = current_reading - previous_reading
+
+    with get_connection() as connection:
+        consumer = connection.execute(
+            "SELECT Connection_Type FROM Consumers WHERE C_ID = ?",
+            (c_id,),
+        ).fetchone()
+        if consumer is None:
+            print("Consumer not found")
             return
-        new_line = input("New line content: ")
-        lines = p.read_text(encoding="utf-8").splitlines()
-        if lineno < 1 or lineno > len(lines):
-            print("Line number out of range")
+
+        tariff = connection.execute(
+            """
+            SELECT * FROM Tariff
+            WHERE Connection_Type = ? AND ? BETWEEN Min_Units AND Max_Units
+            LIMIT 1
+            """,
+            (consumer["Connection_Type"], units),
+        ).fetchone()
+        if tariff is None:
+            print("No tariff available for these units")
             return
-        lines[lineno - 1] = new_line
-        p.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
-        print("Line updated.")
+
+        energy_charge = units * tariff["Rate_Per_Unit"]
+        total = energy_charge + tariff["Fixed_Charge"]
+        total = total + (total * tariff["Tax_Percent"] / 100)
+
+        connection.execute(
+            """
+            INSERT INTO Bill
+                (C_ID, Bill_Month, Previous_Reading, Current_Reading,
+                 Units_Consumed, Rate_Per_Unit, Total_Amt, Status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                c_id,
+                bill_month,
+                previous_reading,
+                current_reading,
+                units,
+                tariff["Rate_Per_Unit"],
+                round(total, 2),
+                "Due",
+            ),
+        )
+        print("Bill appended successfully")
+
+
+def update_consumer():
+    c_id = int(input("Enter consumer ID: "))
+    new_name = input("Enter new name: ")
+
+    with get_connection() as connection:
+        result = connection.execute(
+            "UPDATE Consumers SET Customer_Name = ? WHERE C_ID = ?",
+            (new_name, c_id),
+        )
+
+    if result.rowcount == 0:
+        print("Consumer not found")
     else:
-        print("Invalid mode")
+        print("Name updated successfully")
 
 
-def delete_file_cli():
-    rel = input("File to delete (relative to workspace): ").strip()
-    try:
-        p = resolve_path(rel)
-    except ValueError as e:
-        print(e)
-        return
-    if not p.exists():
-        print("File does not exist.")
-        return
-    yn = input(f"Delete {p.relative_to(ROOT)} ? (y/N): ").strip().lower()
-    if yn != "y":
-        print("Aborted")
-        return
-    if p.is_dir():
-        shutil.rmtree(p)
+def delete_consumer():
+    c_id = int(input("Enter consumer ID to delete: "))
+
+    with get_connection() as connection:
+        connection.execute("DELETE FROM Bill WHERE C_ID = ?", (c_id,))
+        result = connection.execute(
+            "DELETE FROM Consumers WHERE C_ID = ?",
+            (c_id,),
+        )
+
+    if result.rowcount == 0:
+        print("Consumer not found")
     else:
-        p.unlink()
-    print("Deleted.")
+        print("Consumer deleted successfully")
 
 
-def search_cli():
-    pattern = input("Search pattern (regex): ").strip()
-    relpath = input("Directory to search (relative, default '.'):").strip() or "."
-    try:
-        base = resolve_path(relpath)
-    except ValueError as e:
-        print(e)
-        return
-    try:
-        cre = re.compile(pattern)
-    except re.error as e:
-        print("Invalid regex:", e)
-        return
-    for p in base.rglob("*"):
-        if p.is_file():
-            try:
-                text = p.read_text(encoding="utf-8")
-            except Exception:
-                continue
-            for i, line in enumerate(text.splitlines(), 1):
-                if cre.search(line):
-                    print(f"{p.relative_to(ROOT)}:{i}: {line.strip()}")
+def search_consumer():
+    text = input("Enter name, address, or meter ID to search: ")
+    pattern = "%" + text + "%"
+
+    with get_connection() as connection:
+        consumers = connection.execute(
+            """
+            SELECT * FROM Consumers
+            WHERE Customer_Name LIKE ? OR Address LIKE ? OR Meter_ID LIKE ?
+            """,
+            (pattern, pattern, pattern),
+        ).fetchall()
+
+    if not consumers:
+        print("No consumer found")
+    else:
+        for consumer in consumers:
+            print(dict(consumer))
 
 
-def main_menu():
-    actions = {
-        "1": ("Read", read_file_cli),
-        "2": ("Write", write_file_cli),
-        "3": ("Append", append_file_cli),
-        "4": ("Update", update_file_cli),
-        "5": ("Delete", delete_file_cli),
-        "6": ("Search", search_cli),
-        "7": ("Exit", None),
-    }
+def menu():
     while True:
-        print("\nFile Operations CLI — workspace root:", ROOT)
-        for k, (label, _) in actions.items():
-            print(f"{k}. {label}")
-        choice = input("Choose an option: ").strip()
-        if choice == "7":
-            print("Exiting.")
+        print("\n1. Read")
+        print("2. Write")
+        print("3. Append")
+        print("4. Update")
+        print("5. Delete")
+        print("6. Search")
+        print("7. Exit")
+
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            read_consumer()
+        elif choice == "2":
+            write_consumer()
+        elif choice == "3":
+            append_bill()
+        elif choice == "4":
+            update_consumer()
+        elif choice == "5":
+            delete_consumer()
+        elif choice == "6":
+            search_consumer()
+        elif choice == "7":
+            print("Program ended")
             break
-        action = actions.get(choice)
-        if not action:
+        else:
             print("Invalid choice")
-            continue
-        _, fn = action
-        if fn:
-            try:
-                fn()
-            except Exception as e:
-                print("Error:", e)
 
 
 if __name__ == "__main__":
-    main_menu()
+    setup_database()
+    menu()
+
