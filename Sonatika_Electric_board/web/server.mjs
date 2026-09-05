@@ -162,9 +162,22 @@ const server = http.createServer(async (req, res) => {
 
     const paidMatch = url.pathname.match(/^\/api\/bills\/(\d+)\/paid$/);
     if (req.method === 'POST' && paidMatch) {
-      const result = db.prepare("UPDATE Bill SET Status = 'Paid' WHERE B_ID = ?").run(Number(paidMatch[1]));
-      if (!result.changes) fail('Bill not found.', 404);
-      return send(res, 200, { message: 'Bill marked as paid for this project demonstration.' });
+      const billId = Number(paidMatch[1]);
+      const bill = db.prepare('SELECT * FROM Bill WHERE B_ID = ?').get(billId);
+      if (!bill) fail('Bill not found.', 404);
+      if (body.consumer_id != null && Number(body.consumer_id) !== Number(bill.C_ID)) fail('This bill does not belong to the signed-in consumer.', 403);
+      const method = body.method == null ? 'authority' : text(body.method, 'Payment method', 20);
+      if (!['upi', 'card', 'bank', 'authority'].includes(method)) fail('Choose a valid payment method.');
+      if (method !== 'authority') text(body.reference, 'Payment reference', 40);
+      db.prepare("UPDATE Bill SET Status = 'Paid' WHERE B_ID = ?").run(billId);
+      const paidAt = new Date().toISOString();
+      return send(res, 200, {
+        message: 'Bill payment recorded successfully.',
+        billId,
+        amount: Number(bill.Total_Amt),
+        transactionId: `SEB-${billId}-${Date.now().toString(36).toUpperCase()}`,
+        paidAt,
+      });
     }
 
     const consumerMatch = url.pathname.match(/^\/api\/consumers\/(\d+)$/);
