@@ -30,4 +30,15 @@ dialog{width:520px;max-width:calc(100vw - 30px);max-height:90vh;overflow:auto;pa
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 @media print{body{background:#fff}.sidebar,.portal-header,.receipt-actions,.receipt-help,#toast{display:none!important}.portal{display:block;background:#fff}.portal-content{padding:0}.receipt-card{border:1px solid #d1d5db;box-shadow:none;color:#111;background:#fff}.receipt-success p,.receipt-amount small,.receipt-grid span{color:#4b5563}.receipt-amount{background:#f0fdf4}.receipt-grid div{border-color:#d1d5db}.receipt-footer{border-color:#d1d5db}}
 
+/* Liquid glass glide: a soft capsule highlight floats over each control on hover. */
+button{transition:transform .62s cubic-bezier(.16,1,.3,1),box-shadow .62s cubic-bezier(.16,1,.3,1),background-color .45s ease,border-color .45s ease,color .45s ease,filter .45s ease;transform-origin:center bottom;will-change:transform,box-shadow}
+button::before{background:linear-gradient(112deg,rgba(255,255,255,0) 20%,rgba(255,255,255,.12) 39%,rgba(255,255,255,.58) 49%,rgba(255,255,255,.08) 58%,rgba(255,255,255,0) 76%);opacity:.72;transform:translateX(-145%) skewX(-18deg) scaleX(.72);transition:transform .9s cubic-bezier(.16,1,.3,1),opacity .45s ease}
+button::after{content:"";position:absolute;z-index:0;top:-42%;left:-58%;width:46%;height:184%;border:1px solid rgba(255,255,255,.32);border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.18),rgba(255,255,255,0));box-shadow:0 0 18px rgba(255,255,255,.12);filter:blur(2px);opacity:0;pointer-events:none;transform:translateX(-40%) rotate(16deg);transition:transform 1.05s cubic-bezier(.16,1,.3,1),opacity .55s ease}
+button:hover:not(:disabled){transform:translateY(-3px) scale(1.018) rotateX(2deg);box-shadow:0 18px 34px rgba(0,0,0,.28),0 0 0 1px rgba(255,255,255,.1),inset 0 1px 0 rgba(255,255,255,.38);filter:saturate(1.12) brightness(1.04)}
+button:hover:not(:disabled)::before{transform:translateX(145%) skewX(-18deg) scaleX(.72);opacity:1}
+button:hover:not(:disabled)::after{transform:translateX(335%) rotate(16deg);opacity:.9}
+button:active:not(:disabled){transform:translateY(1px) scale(.975) rotateX(0);box-shadow:0 7px 14px rgba(0,0,0,.2),inset 0 2px 5px rgba(0,0,0,.16);transition-duration:.16s}
+button:active:not(:disabled)::after{transform:translateX(220%) rotate(16deg);opacity:.48;transition-duration:.2s}
+@media(prefers-reduced-motion:reduce){button,button::before,button::after{transition:none!important;animation:none!important;transform:none!important}}
+
 .landing-hero>.hero-bg{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
