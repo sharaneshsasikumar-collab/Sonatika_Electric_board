@@ -180,6 +180,17 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    const nameMatch = url.pathname.match(/^\/api\/consumers\/(\d+)\/name$/);
+    if (req.method === 'PUT' && nameMatch) {
+      const consumer = getConsumer(nameMatch[1]);
+      const meter = text(body.meter_id, 'Meter ID', 20);
+      if (meter.toLowerCase() !== String(consumer.Meter_ID).toLowerCase()) fail('Meter verification failed.', 403);
+      const name = text(body.name, 'Consumer name');
+      if (name.length < 2) fail('Consumer name must contain at least 2 characters.');
+      db.prepare('UPDATE Consumers SET Customer_Name = ? WHERE C_ID = ?').run(name, consumer.C_ID);
+      return send(res, 200, { message: 'Display name updated successfully.', name });
+    }
+
     const consumerMatch = url.pathname.match(/^\/api\/consumers\/(\d+)$/);
     if (req.method === 'DELETE' && consumerMatch) {
       const consumer = getConsumer(consumerMatch[1]);

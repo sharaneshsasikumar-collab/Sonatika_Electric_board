@@ -23,7 +23,7 @@ Open <http://localhost:3000>.
 
 The sequence is: landing page → login → loading animation → role-based dashboard.
 
-Consumers can sign in with their numeric consumer ID or meter ID. Sample meter IDs include `RES1001` and `COM2001`. After login, each consumer sees their own connection, consumption, and bill records. An unpaid bill opens the secure demonstration payment flow and produces a printable payment confirmation receipt.
+Consumers can sign in with their numeric consumer ID or meter ID. Sample meter IDs include `RES1001` and `COM2001`. After login, each consumer sees their own connection, consumption, and bill records. The My Connection page includes a meter-verified setting for correcting the consumer display name. An unpaid bill opens the secure demonstration payment flow and produces a printable payment confirmation receipt.
 
 For the Class XII administrator demonstration, use administrator ID `ADMIN001` and password `SEB2026`. The authority dashboard provides access to the consumer and billing database, bill generation, tariff rates, and project information. Bill generation is available only in the administrator interface.
 
