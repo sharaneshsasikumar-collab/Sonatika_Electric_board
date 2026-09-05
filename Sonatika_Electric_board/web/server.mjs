@@ -15,6 +15,7 @@ const MIME = {
   '.js': 'text/javascript; charset=utf-8',
   '.png': 'image/png',
   '.svg': 'image/svg+xml',
+  '.mp4': 'video/mp4',
 };
 
 mkdirSync(dirname(DB_FILE), { recursive: true });
