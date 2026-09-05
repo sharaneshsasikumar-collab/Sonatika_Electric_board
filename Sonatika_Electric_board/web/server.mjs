@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { insertBill } from './billing.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = resolve(ROOT, 'public');
@@ -157,8 +158,17 @@ const server = http.createServer(async (req, res) => {
       const units = Math.round((current - previous) * 100) / 100;
       const calculation = quote(consumer.Connection_Type, units);
       const month = text(body.bill_month, 'Bill month', 30);
-      const result = db.prepare('INSERT INTO Bill (C_ID, Bill_Month, Previous_Reading, Current_Reading, Units_Consumed, Rate_Per_Unit, Total_Amt, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(consumer.C_ID, month, previous, current, units, calculation.rate, calculation.total, UNPAID);
-      return send(res, 201, { message: 'Bill generated successfully.', billId: Number(result.lastInsertRowid), ...calculation });
+      const bill = insertBill(db, {
+        consumerId: consumer.C_ID,
+        month,
+        previous,
+        current,
+        units,
+        rate: calculation.rate,
+        total: calculation.total,
+        status: UNPAID,
+      });
+      return send(res, 201, { message: 'Bill generated successfully.', billId: Number(bill.B_ID), bill, ...calculation });
     }
 
     const paidMatch = url.pathname.match(/^\/api\/bills\/(\d+)\/paid$/);

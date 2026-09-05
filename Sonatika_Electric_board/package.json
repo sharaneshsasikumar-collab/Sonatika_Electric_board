@@ -9,7 +9,7 @@
     "dev": "node --watch web/server.mjs",
     "terminal": "python3 src/server.py",
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check web/server.mjs && node --check public/app.js && node --check public/liquid-glass.js"
+    "check": "node --check web/server.mjs && node --check web/billing.mjs && node --check public/app.js && node --check public/liquid-glass.js"
   },
   "engines": {
     "node": ">=22.13.0"

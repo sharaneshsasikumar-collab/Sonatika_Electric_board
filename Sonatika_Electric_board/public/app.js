@@ -6,8 +6,9 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const paid=b=>/^paid(?:$|\/)/i.test(b.Status);const currentUser=()=>data.consumers.find(c=>c.C_ID===userId)||data.consumers[0];
 const userBills=()=>data.bills.filter(b=>Number(b.C_ID)===Number(currentUser()?.C_ID));const types=()=>[...new Set(data.tariffs.map(t=>t.Connection_Type))];
 const initials=name=>String(name||'SEB').split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();const cid=id=>`SEB-${String(id).padStart(7,'0')}`;
-async function api(path,method='GET',body){const res=await fetch('/api/'+path,{method,headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const result=await res.json();if(!res.ok)throw new Error(result.error||'Request failed.');return result}
-async function refresh(){data=await api('data');if(userId===null&&data.consumers.length)userId=data.consumers[0].C_ID}
+const pendingBills=new Map();
+async function api(path,method='GET',body){const res=await fetch('/api/'+path,{method,headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const result=await res.json();if(!res.ok)throw new Error(result.error||'Request failed.');if(path==='bills'&&method==='POST'&&result.bill){pendingBills.set(Number(result.bill.B_ID),result.bill);data.bills=[result.bill,...data.bills.filter(b=>Number(b.B_ID)!==Number(result.bill.B_ID))]}return result}
+async function refresh(){const latest=await api('data');for(const [id,bill]of pendingBills){if(latest.bills.some(item=>Number(item.B_ID)===id))pendingBills.delete(id);else latest.bills.unshift(bill)}data=latest;if(userId===null&&data.consumers.length)userId=data.consumers[0].C_ID}
 function toast(message){toastEl.textContent=message;toastEl.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('show'),4500)}
 function landing(){
  const tamil=landingLanguage==='ta';
