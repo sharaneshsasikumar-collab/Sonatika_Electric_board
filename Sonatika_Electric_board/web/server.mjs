@@ -211,7 +211,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Sonatika Class XII web project: http://localhost:${PORT}`);
   console.log('Original Python interface: python3 src/server.py');
 });
