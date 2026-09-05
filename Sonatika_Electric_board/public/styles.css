@@ -42,3 +42,37 @@ button:active:not(:disabled)::after{transform:translateX(220%) rotate(16deg);opa
 @media(prefers-reduced-motion:reduce){button,button::before,button::after{transition:none!important;animation:none!important;transform:none!important}}
 
 .landing-hero>.hero-bg{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+
+/* Refined refractive glass controls with one shared selector per button group. */
+:root{--glass-edge:rgba(255,255,255,.2);--glass-shadow:0 9px 24px rgba(0,20,15,.2)}
+button{border-color:rgba(255,255,255,.16);box-shadow:0 8px 22px rgba(0,20,15,.2),inset 0 1px 0 rgba(255,255,255,.24),inset 0 -1px 0 rgba(0,0,0,.1);backdrop-filter:blur(18px) saturate(145%);-webkit-backdrop-filter:blur(18px) saturate(145%);transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s cubic-bezier(.22,1,.36,1),background .45s ease,border-color .45s ease,color .35s ease,filter .45s ease}
+button::before{inset:0;background:linear-gradient(108deg,transparent 13%,rgba(255,255,255,.08) 30%,rgba(255,255,255,.44) 47%,rgba(255,255,255,.1) 61%,transparent 78%);opacity:.52;transform:translateX(-150%) skewX(-17deg);transition:transform .8s cubic-bezier(.22,1,.36,1),opacity .35s ease}
+button::after{inset:1px;left:1px;top:1px;width:auto;height:auto;border:1px solid rgba(255,255,255,.12);border-radius:inherit;background:radial-gradient(120% 90% at 18% 0%,rgba(255,255,255,.28),transparent 48%),linear-gradient(180deg,rgba(255,255,255,.08),transparent 48%);box-shadow:inset 0 1px 0 rgba(255,255,255,.18);filter:none;opacity:.65;transform:translate3d(0,0,0);transition:transform .55s cubic-bezier(.22,1,.36,1),opacity .4s ease}
+button:hover:not(:disabled){transform:translateY(-2px) scale(1.012);border-color:rgba(255,255,255,.3);box-shadow:0 15px 32px rgba(0,20,15,.28),0 2px 8px rgba(52,211,153,.12),inset 0 1px 0 rgba(255,255,255,.38),inset 0 -1px 0 rgba(0,0,0,.08);filter:saturate(1.08) brightness(1.04)}
+button:hover:not(:disabled)::before{transform:translateX(150%) skewX(-17deg);opacity:.9}
+button:hover:not(:disabled)::after{transform:translate3d(3px,-1px,0);opacity:.92}
+button:active:not(:disabled){transform:translateY(1px) scale(.982);box-shadow:0 5px 13px rgba(0,20,15,.24),inset 0 2px 5px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.2);transition-duration:.14s}
+button:active:not(:disabled)::after{transform:translate3d(-2px,1px,0);opacity:.7;transition-duration:.14s}
+.nav,.role-tabs,.period-tabs,.payment-methods{position:relative;isolation:isolate}
+.glass-selector{position:absolute;z-index:0;left:0;top:0;display:block;margin:0;border:1px solid rgba(255,255,255,.28);border-radius:12px;background:radial-gradient(120% 130% at 18% -20%,rgba(255,255,255,.46),transparent 48%),linear-gradient(135deg,rgba(255,255,255,.18),rgba(163,230,53,.3) 58%,rgba(52,211,153,.15));box-shadow:0 12px 28px rgba(0,20,15,.3),0 2px 10px rgba(163,230,53,.12),inset 0 1px 0 rgba(255,255,255,.58),inset 0 -1px 1px rgba(0,0,0,.12);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);pointer-events:none;overflow:hidden;opacity:0;transition:none}
+.glass-selector::before{content:"";position:absolute;inset:1px;border-radius:inherit;background:linear-gradient(110deg,rgba(255,255,255,.2),transparent 34% 65%,rgba(255,255,255,.12));box-shadow:inset 0 0 0 1px rgba(255,255,255,.09)}
+.glass-selector::after{content:"";position:absolute;top:-65%;left:-20%;width:46%;height:220%;border-radius:50%;background:rgba(255,255,255,.25);filter:blur(10px);transform:rotate(18deg)}
+.glass-selector.ready{opacity:1;transition:transform .72s cubic-bezier(.2,1.35,.32,1),width .72s cubic-bezier(.2,1.35,.32,1),height .72s cubic-bezier(.2,1.35,.32,1),opacity .18s ease}
+:where(.nav,.role-tabs,.period-tabs,.payment-methods)>button{z-index:1;border-color:transparent!important;background:transparent!important;box-shadow:none!important;backdrop-filter:none;-webkit-backdrop-filter:none;filter:none!important;transition:color .38s ease,opacity .38s ease,transform .2s ease}
+:where(.nav,.role-tabs,.period-tabs,.payment-methods)>button::before,:where(.nav,.role-tabs,.period-tabs,.payment-methods)>button::after{display:none}
+:where(.nav,.role-tabs,.period-tabs,.payment-methods)>button:hover:not(:disabled){transform:none;background:rgba(255,255,255,.055)!important;color:#fff;border-color:transparent!important}
+:where(.nav,.role-tabs,.period-tabs,.payment-methods)>button:active:not(:disabled){transform:scale(.985)}
+:where(.nav,.role-tabs,.period-tabs,.payment-methods)>button.active{background:transparent!important;color:#f7fff9;font-weight:700;box-shadow:none!important}
+.nav>button.active,.period-tabs>button.active{color:#f7fff9!important}
+.nav{gap:5px;padding:3px;border-radius:15px;background:rgba(0,30,23,.16)}
+.nav button{padding-inline:13px;border-radius:12px;color:rgba(216,244,229,.7)}
+.nav .glass-selector{border-radius:12px}
+.role-tabs{gap:0;padding:4px;border-color:rgba(255,255,255,.08);border-radius:14px;background:rgba(0,25,19,.32);box-shadow:inset 0 1px 5px rgba(0,0,0,.14)}
+.role-tabs button{border-radius:10px}
+.role-tabs .glass-selector{border-radius:10px}
+.period-tabs{gap:2px;background:rgba(0,25,19,.2);box-shadow:inset 0 1px 4px rgba(0,0,0,.12)}
+.period-tabs .glass-selector{border-radius:8px}
+.payment-methods .glass-selector{border-radius:15px}
+.payment-methods>button{padding:15px 12px}
+@media(max-width:720px){.nav{padding:3px;gap:3px}.nav .glass-selector{border-radius:10px}.payment-methods{gap:7px}}
+@media(prefers-reduced-motion:reduce){.glass-selector,.glass-selector.ready{transition:none!important}}
