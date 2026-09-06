@@ -9,9 +9,15 @@
     "dev": "node --watch web/server.mjs",
     "terminal": "python3 src/server.py",
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check web/server.mjs && node --check web/billing.mjs && node --check public/app.js && node --check public/liquid-glass.js"
+    "check": "node --check web/server.mjs && node --check web/billing.mjs && node --check public/app.js && node --check public/liquid-glass.js && node --check web/database.mjs && node --check web/postgres.mjs && node --check web/import-records.mjs && node --check scripts/import-postgres.mjs"
   },
   "engines": {
     "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8"
   }
 }

@@ -3,7 +3,7 @@ import test from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 import { insertBill } from '../web/billing.mjs';
 
-test('every generated bill is persisted and returned to the ledger', () => {
+test('every generated bill is persisted and returned to the ledger', async () => {
   const db = new DatabaseSync(':memory:');
   db.exec(`
     CREATE TABLE Bill (
@@ -19,7 +19,7 @@ test('every generated bill is persisted and returned to the ledger', () => {
     )
   `);
 
-  const created = [0, 1, 2].map(index => insertBill(db, {
+  const created = await Promise.all([0, 1, 2].map(index => insertBill(db, {
     consumerId: 2,
     month: '2026-09',
     previous: 1000 + index * 100,
@@ -28,7 +28,8 @@ test('every generated bill is persisted and returned to the ledger', () => {
     rate: 2.5,
     total: 315,
     status: 'Due',
-  }));
+  })));
+
 
   assert.deepEqual(created.map(bill => bill.B_ID), [1, 2, 3]);
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM Bill').get().count, 3);

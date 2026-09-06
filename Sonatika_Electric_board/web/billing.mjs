@@ -1,4 +1,4 @@
-export function insertBill(db, bill) {
+export async function insertBill(db, bill) {
   const statement = db.prepare(`
     INSERT INTO Bill
       (C_ID, Bill_Month, Previous_Reading, Current_Reading,
@@ -6,7 +6,7 @@ export function insertBill(db, bill) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     RETURNING *
   `);
-  const created = statement.get(
+  const created = await statement.get(
     bill.consumerId,
     bill.month,
     bill.previous,

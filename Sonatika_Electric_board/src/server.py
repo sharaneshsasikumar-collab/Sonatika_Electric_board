@@ -1,10 +1,11 @@
 from pathlib import Path
 import sqlite3
+import os
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
-DB_FILE = DATA_DIR / "sonatika.db"
+DB_FILE = (ROOT / os.environ.get("SONATIKA_DB", "data/sonatika.db")).resolve()
 SCHEMA_FILE = DATA_DIR / "schema.sql"
 SEED_FILE = DATA_DIR / "seed.sql"
 
@@ -17,14 +18,20 @@ def get_connection():
 
 
 def setup_database():
-    DATA_DIR.mkdir(exist_ok=True)
+    if os.environ.get("DATABASE_URL"):
+        raise RuntimeError("The Python terminal uses SQLite only. Use the web administrator portal for the hosted PostgreSQL database; refusing to write a separate local database.")
+    production = os.environ.get("NODE_ENV") == "production" or os.environ.get("RENDER") == "true"
+    if production and (not os.environ.get("SONATIKA_DB") or not DB_FILE.exists()):
+        raise RuntimeError("Configure an existing persistent SONATIKA_DB before running the terminal in production.")
+    DB_FILE.parent.mkdir(parents=True, exist_ok=True)
     with get_connection() as connection:
+        initialized = connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='Consumers'").fetchone()
         connection.executescript(SCHEMA_FILE.read_text(encoding="utf-8"))
-        consumer_count = connection.execute(
-            "SELECT COUNT(*) FROM Consumers"
-        ).fetchone()[0]
-        if consumer_count == 0:
+        if not initialized and not production:
+            # Legacy demo data includes orphan references. Seed only once.
+            connection.execute("PRAGMA foreign_keys = OFF")
             connection.executescript(SEED_FILE.read_text(encoding="utf-8"))
+            connection.execute("PRAGMA foreign_keys = ON")
 
 
 def read_consumer():

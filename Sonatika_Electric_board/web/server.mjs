@@ -1,15 +1,15 @@
 import http from 'node:http';
-import { DatabaseSync } from 'node:sqlite';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { insertBill } from './billing.mjs';
+import { openDatabase } from './database.mjs';
+import { randomUUID } from 'node:crypto';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = resolve(ROOT, 'public');
-const DB_FILE = process.env.SONATIKA_DB || resolve(ROOT, 'data/sonatika.db');
 const PORT = Number(process.env.PORT || 3000);
-const UNPAID = 'if the bill is not paid then you connection will be disconnected/உங்கள் பில் செலுத்தப்படாவிட்டால் உங்கள் இணைப்பு துண்டிக்கப்படும்';
+const UNPAID = 'Unpaid';
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -19,14 +19,7 @@ const MIME = {
   '.mp4': 'video/mp4',
 };
 
-mkdirSync(dirname(DB_FILE), { recursive: true });
-const freshDatabase = !existsSync(DB_FILE);
-const db = new DatabaseSync(DB_FILE);
-db.exec('PRAGMA busy_timeout = 3000; PRAGMA foreign_keys = OFF;');
-if (freshDatabase) {
-  db.exec(readFileSync(resolve(ROOT, 'data/schema.sql'), 'utf8'));
-  db.exec(readFileSync(resolve(ROOT, 'data/seed.sql'), 'utf8'));
-}
+const { db, file: DB_FILE } = await openDatabase(ROOT);
 
 function send(res, status, payload, contentType = 'application/json; charset=utf-8') {
   res.writeHead(status, {
@@ -56,25 +49,25 @@ function number(value, label) {
   return result;
 }
 
-function getConsumer(id) {
-  const consumer = db.prepare('SELECT * FROM Consumers WHERE C_ID = ?').get(Number(id));
+async function getConsumer(id) {
+  const consumer = await db.prepare('SELECT * FROM Consumers WHERE C_ID = ?').get(Number(id));
   if (!consumer) fail('Consumer not found.', 404);
   return consumer;
 }
 
-function quote(connectionType, units) {
-  const tariff = db.prepare('SELECT * FROM Tariff WHERE Connection_Type = ? AND ? BETWEEN Min_Units AND Max_Units LIMIT 1').get(connectionType, units);
+async function quote(connectionType, units) {
+  const tariff = await db.prepare('SELECT * FROM Tariff WHERE Connection_Type = ? AND ? BETWEEN Min_Units AND Max_Units LIMIT 1').get(connectionType, units);
   if (!tariff) fail('No tariff is available for this usage. Use a whole-unit reading.');
   const energy = units * tariff.Rate_Per_Unit;
-  const subtotal = energy + tariff.Fixed_Charge;
+  const subtotal = energy + Number(tariff.Fixed_Charge);
   const tax = subtotal * tariff.Tax_Percent / 100;
   return {
     units,
-    rate: tariff.Rate_Per_Unit,
+    rate: Number(tariff.Rate_Per_Unit),
     energy: Math.round(energy * 100) / 100,
-    fixed: tariff.Fixed_Charge,
+    fixed: Number(tariff.Fixed_Charge),
     tax: Math.round(tax * 100) / 100,
-    taxPercent: tariff.Tax_Percent,
+    taxPercent: Number(tariff.Tax_Percent),
     total: Math.round((subtotal + tax) * 100) / 100,
   };
 }
@@ -102,10 +95,10 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'GET' && url.pathname === '/api/data') {
       return send(res, 200, {
-        consumers: db.prepare('SELECT * FROM Consumers ORDER BY C_ID').all(),
-        bills: db.prepare('SELECT * FROM Bill ORDER BY B_ID DESC').all(),
-        tariffs: db.prepare('SELECT * FROM Tariff ORDER BY Connection_Type, Min_Units').all(),
-        readings: db.prepare('SELECT * FROM Meter_Readings ORDER BY R_Date DESC, R_ID DESC').all(),
+        consumers: await db.prepare('SELECT * FROM Consumers ORDER BY C_ID').all(),
+        bills: await db.prepare('SELECT * FROM Bill ORDER BY B_ID DESC').all(),
+        tariffs: await db.prepare('SELECT * FROM Tariff ORDER BY Connection_Type, Min_Units').all(),
+        readings: await db.prepare('SELECT * FROM Meter_Readings ORDER BY R_Date DESC, R_ID DESC').all(),
       });
     }
 
@@ -123,15 +116,15 @@ const server = http.createServer(async (req, res) => {
       if (role !== 'consumer') fail('Choose Consumer or Administrator.');
       const normalized = identity.replace(/^SEB-/i, '');
       const consumer = /^\d+$/.test(normalized)
-        ? db.prepare('SELECT * FROM Consumers WHERE C_ID = ?').get(Number(normalized))
-        : db.prepare('SELECT * FROM Consumers WHERE LOWER(Meter_ID) = LOWER(?)').get(identity);
+        ? await db.prepare('SELECT * FROM Consumers WHERE C_ID = ?').get(Number(normalized))
+        : await db.prepare('SELECT * FROM Consumers WHERE LOWER(Meter_ID) = LOWER(?)').get(identity);
       if (!consumer) fail('Consumer not found. Check your consumer ID or meter ID.', 401);
       return send(res, 200, { role: 'consumer', consumer });
     }
 
     if (req.method === 'POST' && url.pathname === '/api/quote') {
       const units = number(body.units, 'Units');
-      return send(res, 200, quote(text(body.connection_type, 'Connection type'), units));
+      return send(res, 200, await quote(text(body.connection_type, 'Connection type'), units));
     }
 
     if (req.method === 'POST' && url.pathname === '/api/consumers') {
@@ -142,23 +135,23 @@ const server = http.createServer(async (req, res) => {
       const type = text(body.connection_type, 'Connection type');
       if (!/^\d{10}$/.test(phone)) fail('Phone must contain exactly 10 digits.');
       try {
-        const result = db.prepare('INSERT INTO Consumers (Customer_Name, Address, Phone, Meter_ID, Connection_Type) VALUES (?, ?, ?, ?, ?)').run(name, address, phone, meter, type);
-        return send(res, 201, { message: 'Connection registered successfully.', id: Number(result.lastInsertRowid) });
+        const result = await db.prepare('INSERT INTO Consumers (Customer_Name, Address, Phone, Meter_ID, Connection_Type) VALUES (?, ?, ?, ?, ?) RETURNING C_ID').get(name, address, phone, meter, type);
+        return send(res, 201, { message: 'Connection registered successfully.', id: Number(result.C_ID) });
       } catch (error) {
-        if (error.message.includes('UNIQUE')) fail('That meter ID is already registered.');
+        if (error.code === '23505' || error.message.includes('UNIQUE')) fail('That meter ID is already registered.');
         throw error;
       }
     }
 
     if (req.method === 'POST' && url.pathname === '/api/bills') {
-      const consumer = getConsumer(body.consumer_id);
+      const consumer = await getConsumer(body.consumer_id);
       const previous = number(body.previous_reading, 'Previous reading');
       const current = number(body.current_reading, 'Current reading');
       if (current < previous) fail('Current reading cannot be less than the previous reading.');
       const units = Math.round((current - previous) * 100) / 100;
-      const calculation = quote(consumer.Connection_Type, units);
+      const calculation = await quote(consumer.Connection_Type, units);
       const month = text(body.bill_month, 'Bill month', 30);
-      const bill = insertBill(db, {
+      const bill = await insertBill(db, {
         consumerId: consumer.C_ID,
         month,
         previous,
@@ -174,44 +167,47 @@ const server = http.createServer(async (req, res) => {
     const paidMatch = url.pathname.match(/^\/api\/bills\/(\d+)\/paid$/);
     if (req.method === 'POST' && paidMatch) {
       const billId = Number(paidMatch[1]);
-      const bill = db.prepare('SELECT * FROM Bill WHERE B_ID = ?').get(billId);
+      const bill = await db.prepare('SELECT * FROM Bill WHERE B_ID = ?').get(billId);
       if (!bill) fail('Bill not found.', 404);
       if (body.consumer_id != null && Number(body.consumer_id) !== Number(bill.C_ID)) fail('This bill does not belong to the signed-in consumer.', 403);
       const method = body.method == null ? 'authority' : text(body.method, 'Payment method', 20);
       if (!['upi', 'card', 'bank', 'authority'].includes(method)) fail('Choose a valid payment method.');
       if (method !== 'authority') text(body.reference, 'Payment reference', 40);
-      db.prepare("UPDATE Bill SET Status = 'Paid' WHERE B_ID = ?").run(billId);
-      const paidAt = new Date().toISOString();
+      // A conditional update preserves the original receipt when a request is retried.
+      await db.prepare(`UPDATE Bill SET Status = 'Paid', Paid_At = ?, Payment_Method = ?, Transaction_ID = ?
+        WHERE B_ID = ? AND LOWER(TRIM(Status)) != 'paid' AND LOWER(TRIM(Status)) NOT LIKE 'paid/%'`)
+        .run(new Date().toISOString(), method, `SEB-${billId}-${randomUUID()}`, billId);
+      const saved = await db.prepare('SELECT * FROM Bill WHERE B_ID = ?').get(billId);
       return send(res, 200, {
         message: 'Bill payment recorded successfully.',
         billId,
         amount: Number(bill.Total_Amt),
-        transactionId: `SEB-${billId}-${Date.now().toString(36).toUpperCase()}`,
-        paidAt,
+        transactionId: saved.Transaction_ID,
+        paidAt: saved.Paid_At,
+        method: saved.Payment_Method,
+        bill: saved,
       });
     }
 
     const nameMatch = url.pathname.match(/^\/api\/consumers\/(\d+)\/name$/);
     if (req.method === 'PUT' && nameMatch) {
-      const consumer = getConsumer(nameMatch[1]);
+      const consumer = await getConsumer(nameMatch[1]);
       const meter = text(body.meter_id, 'Meter ID', 20);
       if (meter.toLowerCase() !== String(consumer.Meter_ID).toLowerCase()) fail('Meter verification failed.', 403);
       const name = text(body.name, 'Consumer name');
       if (name.length < 2) fail('Consumer name must contain at least 2 characters.');
-      db.prepare('UPDATE Consumers SET Customer_Name = ? WHERE C_ID = ?').run(name, consumer.C_ID);
+      await db.prepare('UPDATE Consumers SET Customer_Name = ? WHERE C_ID = ?').run(name, consumer.C_ID);
       return send(res, 200, { message: 'Display name updated successfully.', name });
     }
 
     const consumerMatch = url.pathname.match(/^\/api\/consumers\/(\d+)$/);
     if (req.method === 'DELETE' && consumerMatch) {
-      const consumer = getConsumer(consumerMatch[1]);
-      db.exec('BEGIN');
-      try {
-        db.prepare('DELETE FROM Bill WHERE C_ID = ?').run(consumer.C_ID);
-        db.prepare('DELETE FROM Meter_Readings WHERE C_ID = ?').run(consumer.C_ID);
-        db.prepare('DELETE FROM Consumers WHERE C_ID = ?').run(consumer.C_ID);
-        db.exec('COMMIT');
-      } catch (error) { db.exec('ROLLBACK'); throw error; }
+      const consumer = await getConsumer(consumerMatch[1]);
+      await db.batch([
+        ['DELETE FROM Bill WHERE C_ID = ?', [consumer.C_ID]],
+        ['DELETE FROM Meter_Readings WHERE C_ID = ?', [consumer.C_ID]],
+        ['DELETE FROM Consumers WHERE C_ID = ?', [consumer.C_ID]],
+      ]);
       return send(res, 200, { message: 'Consumer record deleted.' });
     }
 
@@ -222,7 +218,12 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Sonatika Class XII web project: http://localhost:${PORT}`);
+server.listen(PORT, process.env.HOST || '0.0.0.0', () => {
+  console.log(`Sonatika Class XII web project: http://localhost:${server.address().port}`);
+  console.log(`Database: ${DB_FILE}`);
   console.log('Original Python interface: python3 src/server.py');
 });
+
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => server.close(async () => { await db.close(); process.exit(0); }));
+}

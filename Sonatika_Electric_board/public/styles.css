@@ -68,3 +68,5 @@ button.liquid-button.text-button,button.liquid-button.language{color:#d3f5dc}
 @media(max-width:720px){.nav.liquid-group{padding:5px;gap:4px}.payment-methods.liquid-group{border-radius:27px}}
 @media(prefers-reduced-motion:reduce){button.liquid-button,button.liquid-button::before,button.liquid-button::after,.liquid-lens{animation:none!important;transition:none!important}button.liquid-button,button.liquid-button::before,button.liquid-button::after{transform:none!important}}
 @media(forced-colors:active){button.liquid-button{border:1px solid ButtonText;color:ButtonText}.liquid-group>button.liquid-button.active{outline:2px solid Highlight;outline-offset:-3px}.liquid-lens,button.liquid-button::before,button.liquid-button::after{display:none}}
+
+.billing-ledger + .billing-ledger{margin-top:24px}

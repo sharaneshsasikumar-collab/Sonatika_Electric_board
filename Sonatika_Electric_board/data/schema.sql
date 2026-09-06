@@ -38,3 +38,12 @@ CREATE TABLE IF NOT EXISTS Bill (
     Status TEXT NOT NULL DEFAULT 'if the bill is not paid then you connection will be disconnected/உங்கள் பில் செலுத்தப்படாவிட்டால் உங்கள் இணைப்பு துண்டிக்கப்படும்',
     FOREIGN KEY (C_ID) REFERENCES Consumers(C_ID)
 );
+
+CREATE INDEX IF NOT EXISTS Bill_Consumer ON Bill(C_ID, B_ID);
+
+-- Views move bills between ledgers automatically when Status changes.
+CREATE VIEW IF NOT EXISTS Paid_Bills AS
+SELECT * FROM Bill WHERE LOWER(TRIM(Status)) = 'paid' OR LOWER(TRIM(Status)) LIKE 'paid/%';
+
+CREATE VIEW IF NOT EXISTS Unpaid_Bills AS
+SELECT * FROM Bill WHERE LOWER(TRIM(Status)) != 'paid' AND LOWER(TRIM(Status)) NOT LIKE 'paid/%';
