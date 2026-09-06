@@ -103,11 +103,11 @@ Transaction IDs, payment methods and dates are stored with the bill. Retrying a
 payment preserves the original receipt. The UI reloads data on login, navigation,
 window focus and every 30 seconds while viewing the dashboard or bill tables.
 
-Production startup refuses to fall back to an ephemeral SQLite database if
-`DATABASE_URL` is missing. A database outage is reported as an error, not replaced
-with demo records. For existing installations deliberately using a persistent
-SQLite disk, set an absolute `SONATIKA_DB` outside the application directory and
-initialize it explicitly with `scripts/setup-database.py` before production use.
+If `DATABASE_URL` is missing, production starts with the bundled SQLite database
+so the website remains reachable. Render can reset new SQLite records after a
+restart or deployment, so configure `DATABASE_URL` before relying on the billing
+ledger for permanent records. Existing installations using a persistent SQLite
+disk can set `SONATIKA_DB` to that database path.
 
 Run `npm run check` and `npm test` for validation. Tests cover SQLite server
 restarts and independent client requests, browser ledger behavior, and PostgreSQL

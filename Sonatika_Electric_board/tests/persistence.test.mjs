@@ -68,10 +68,12 @@ test('five bills and payment receipts survive a restart and independent client l
   } finally { if (server) await server.stop(); rmSync(directory, { recursive: true, force: true }); }
 });
 
-test('production fails instead of silently using a disposable sample database', async () => {
-  await assert.rejects(openDatabase(root, { RENDER: 'true' }), /DATABASE_URL/);
-  await assert.rejects(openDatabase(root, { NODE_ENV: 'production', SONATIKA_DB: resolve(root, 'data/sonatika.db') }), /outside/);
-  await assert.rejects(openDatabase(root, { NODE_ENV: 'production', SONATIKA_DB: '/tmp/sonatika-missing-for-test.db' }), /missing/);
+test('Render starts with bundled SQLite when DATABASE_URL is not configured', async () => {
+  const { db, file } = await openDatabase(root, { RENDER: 'true' });
+  try {
+    assert.equal(file, resolve(root, 'data/sonatika.db'));
+    assert.ok(db.prepare('SELECT COUNT(*) AS count FROM Consumers').get().count > 0);
+  } finally { db.close(); }
 });
 
 test('empty existing databases are not repopulated with demo customers on restart', async () => {
