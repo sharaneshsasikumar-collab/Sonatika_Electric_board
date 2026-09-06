@@ -15,7 +15,7 @@ test('PostgreSQL migration, generated records, paid/unpaid views and restart per
   try {
     await pg.exec(schema);
     await importRecords(pg, {
-      consumers: [{ C_ID: 12, Customer_Name: 'Persistence Test', Address: 'Test', Phone: '1234567890', Meter_ID: 'TEST12', Connection_Type: 'Residential' }],
+      consumers: [{ C_ID: '12.0', Customer_Name: 'Persistence Test', Address: 'Test', Phone: '1234567890', Meter_ID: 'TEST12', Connection_Type: 'Residential' }],
       tariffs: [{ SLAB_ID: 1, Connection_Type: 'Residential', Min_Units: 0, Max_Units: 100, Rate_Per_Unit: 2.5, Fixed_Charge: 50, Tax_Percent: 5 }],
       readings: [], bills: [],
     });

@@ -6,6 +6,18 @@ export const recordTables = [
   ['bills', 'Bill', 'B_ID', ['B_ID','C_ID','Bill_Month','Previous_Reading','Current_Reading','Units_Consumed','Rate_Per_Unit','Total_Amt','Status','Paid_At','Payment_Method','Transaction_ID']],
 ];
 
+const integerColumns = new Set(['C_ID', 'R_ID', 'SLAB_ID', 'B_ID', 'Min_Units', 'Max_Units']);
+function importValue(column, value) {
+  if (!integerColumns.has(column)) return value;
+  // SQLite's loose typing permits IDs such as "2.0" in reference columns.
+  // PostgreSQL requires an integer; preserve the numeric ID without truncation.
+  const number = Number(value);
+  if (value == null || String(value).trim() === '' || !Number.isSafeInteger(number) || number < 0 || number > 2147483647) {
+    throw new Error(`Backup contains an invalid integer in ${column}.`);
+  }
+  return number;
+}
+
 export async function importRecords(client, data) {
   for (const [key] of recordTables) {
     if (!Array.isArray(data[key])) throw new Error(`Backup is missing ${key}.`);
@@ -20,7 +32,7 @@ export async function importRecords(client, data) {
       for (const record of data[key]) {
         const included = columns.filter(column => Object.hasOwn(record, column));
         if (!included.includes(id)) throw new Error(`A ${key} record has no ${id}.`);
-        await client.query(`INSERT INTO ${table} (${included.join(',')}) VALUES (${included.map((_, i) => `$${i+1}`).join(',')})`, included.map(column => record[column]));
+        await client.query(`INSERT INTO ${table} (${included.join(',')}) VALUES (${included.map((_, i) => `$${i+1}`).join(',')})`, included.map(column => importValue(column, record[column])));
       }
       await client.query(`SELECT setval(pg_get_serial_sequence('${table.toLowerCase()}', '${id.toLowerCase()}'), GREATEST(COALESCE(MAX(${id}), 0), 1), COALESCE(MAX(${id}), 0) >= 1) FROM ${table}`);
     }
