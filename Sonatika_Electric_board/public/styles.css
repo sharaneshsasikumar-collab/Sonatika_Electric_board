@@ -70,3 +70,20 @@ button.liquid-button.text-button,button.liquid-button.language{color:#d3f5dc}
 @media(forced-colors:active){button.liquid-button{border:1px solid ButtonText;color:ButtonText}.liquid-group>button.liquid-button.active{outline:2px solid Highlight;outline-offset:-3px}.liquid-lens,button.liquid-button::before,button.liquid-button::after{display:none}}
 
 .billing-ledger + .billing-ledger{margin-top:24px}
+
+/* Tamil landing-page variant */
+.landing-tamil{font-family:"Anek Tamil",Inter,sans-serif}
+.landing-tamil .landing-brand strong{font-family:"Anek Tamil",sans-serif;font-size:39px;line-height:1.28;font-weight:400}
+.landing-tamil .hero-card h1{font-family:"Anek Tamil",sans-serif;font-size:49px;line-height:1.08}
+.landing-tamil .script-title,.landing-tamil .mission h2{font-family:"Anek Tamil",sans-serif}
+.landing-tamil .vision-badge{height:105px;object-fit:contain;background:#fff;padding:17px 24px}
+.landing-tamil .grid-status{font-size:12px}
+.landing-tamil .btn{font-size:13px}
+.landing-tamil .service-card h3{font-family:"Anek Tamil",sans-serif;font-size:18px}
+.landing-tamil .service-card p{font-size:13px;line-height:1.65}
+.landing-tamil .service-card button{font-size:12px}
+@media(max-width:720px){
+ .landing-tamil .landing-brand strong{font-size:27px}
+ .landing-tamil .hero-card h1{font-size:38px}
+ .landing-tamil .vision-badge{height:auto;max-height:130px;padding:13px 18px}
+}
