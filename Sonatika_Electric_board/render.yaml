@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: sonatika-electric-board
+    runtime: node
+    plan: free
+    rootDir: Sonatika_Electric_board
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: REQUIRE_PERSISTENT_DATABASE
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sonatika-database
+          property: connectionString
+
+databases:
+  - name: sonatika-database
+    plan: free
+    databaseName: sonatika
+    user: sonatika

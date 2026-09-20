@@ -58,6 +58,18 @@ Keep the Render web service free and use a separate hosted PostgreSQL database.
 [Render's filesystem documentation](https://render.com/docs/disks) explains why
 local SQLite storage requires a persistent disk instead.
 
+The repository includes `render.yaml`, which creates a free web service and a
+PostgreSQL database together, supplies `DATABASE_URL` automatically, and enables
+`REQUIRE_PERSISTENT_DATABASE`. That safety setting makes startup fail clearly if
+the database connection is ever removed instead of accepting registrations into
+a disposable SQLite file.
+
+For a new deployment, create a Render Blueprint and select
+`Sonatika_Electric_board/render.yaml` as its Blueprint path. For an existing web
+service, create/connect a PostgreSQL database and set its internal connection
+string as the service's private `DATABASE_URL`; also set
+`REQUIRE_PERSISTENT_DATABASE=true`. Environment changes trigger a redeploy.
+
 1. Create a free Neon project and copy its PostgreSQL connection string, keeping
    its SSL parameters. Do not put it in public JavaScript or commit it to Git.
 2. Preserve the currently visible records before restarting or redeploying the
@@ -88,6 +100,7 @@ local SQLite storage requires a persistent disk instead.
    | Start command | `npm start` |
    | `NODE_ENV` | `production` |
    | `DATABASE_URL` | The same private PostgreSQL connection string |
+   | `REQUIRE_PERSISTENT_DATABASE` | `true` |
 
    Remove any old `SONATIKA_DB` setting when using PostgreSQL. Deploy the updated
    code after the import and environment setup. The server binds to `0.0.0.0`

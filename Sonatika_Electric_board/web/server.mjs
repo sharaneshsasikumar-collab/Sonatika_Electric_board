@@ -85,6 +85,10 @@ async function readJson(req) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
+    if (req.method === 'GET' && url.pathname === '/api/health') {
+      await db.prepare('SELECT 1 AS healthy').get();
+      return send(res, 200, { status: 'ok', database: DB_FILE });
+    }
     if (!url.pathname.startsWith('/api/')) {
       if (req.method !== 'GET') return send(res, 405, { error: 'Method not allowed.' });
       const relative = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);

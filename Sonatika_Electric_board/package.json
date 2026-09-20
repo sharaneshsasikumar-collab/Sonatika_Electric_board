@@ -8,7 +8,7 @@
     "start": "node web/server.mjs",
     "dev": "node --watch web/server.mjs",
     "terminal": "python3 src/server.py",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test tests/persistence.test.mjs && node --test tests/billing.test.mjs tests/ledger.test.mjs tests/liquid-glass.test.mjs && node --test tests/postgres.test.mjs",
     "check": "node --check web/server.mjs && node --check web/billing.mjs && node --check public/app.js && node --check public/liquid-glass.js && node --check web/database.mjs && node --check web/postgres.mjs && node --check web/import-records.mjs && node --check scripts/import-postgres.mjs"
   },
   "engines": {

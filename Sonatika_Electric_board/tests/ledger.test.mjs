@@ -5,7 +5,7 @@ import vm from 'node:vm';
 const source=readFileSync(new URL('../public/app.js',import.meta.url),'utf8').replace(/boot\(\);\s*$/, '');
 function fixture() {
   const element={innerHTML:'',classList:{add(){},remove(){}}};
-  const context={document:{querySelector:()=>element,addEventListener(){}},window:{addEventListener(){}},MutationObserver:class{observe(){}},setInterval(){},setTimeout(){},clearTimeout(){},console,Intl,Map};
+  const context={document:{querySelector:()=>element,addEventListener(){}},window:{addEventListener(){}},localStorage:{getItem(){return null},setItem(){}},MutationObserver:class{observe(){}},setInterval(){},setTimeout(){},clearTimeout(){},console,Intl,Map};
   vm.createContext(context);vm.runInContext(source,context);
   const run=code=>vm.runInContext(code,context);
   run(`data={consumers:[{C_ID:1,Customer_Name:'One'},{C_ID:2,Customer_Name:'Two'}],bills:[{B_ID:8,C_ID:1,Status:'Unpaid',Total_Amt:315},{B_ID:9,C_ID:2,Status:'paid/legacy',Total_Amt:400}],tariffs:[],readings:[]};userId=1;`);

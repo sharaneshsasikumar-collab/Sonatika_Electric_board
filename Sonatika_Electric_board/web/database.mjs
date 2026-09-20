@@ -8,6 +8,9 @@ export async function openDatabase(root, env = process.env) {
   if (env.DATABASE_URL) return openPostgres(root, env.DATABASE_URL);
   const production = env.NODE_ENV === 'production' || env.RENDER === 'true';
   const configured = env.SONATIKA_DB;
+  if (production && env.REQUIRE_PERSISTENT_DATABASE === 'true' && !configured) {
+    throw new Error('Persistent database is required. Configure DATABASE_URL before starting this deployment.');
+  }
   const file = resolve(root, configured || 'data/sonatika.db');
   if (production && !configured) {
     console.warn("DATABASE_URL is not configured. Starting with bundled SQLite so the website remains available; Render may reset new records after a restart.");
